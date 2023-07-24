@@ -1,0 +1,38 @@
+# Створюємо s3 Bucket з назвою nazariatus-www в регіоні us-east-1
+
+aws s3api create-bucket --bucket nazariatus-www --region us-east-1
+
+# Копіюємо увесь вміст папки в якій ми з находимось з нашого комп'ютера у s3 Bucket
+
+aws s3 cp . s3://nazariatus-www/ --recursive
+
+# робимо усі файли в нашому s3 Bucket публічними
+
+aws s3 sync s3://nazariatus-www s3://nazariatus-www --acl public-read
+
+# розблоковуємо публічний доступ до s3 Bucket
+
+aws s3api put-public-access-block --bucket nazariatus-www --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+# створюємо файл політики у форматі json під назвою public_access_policy.json з наступним вмістом
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::nazariatus-www/*"
+        }
+    ]
+}
+
+# добавляємо цей файл політики до нашого s3 Bucket
+
+aws s3api put-bucket-policy --bucket nazariatus-www --policy file://public_access_policy.json
+
+# Доступ відкрито
+
+https://nazariatus-www.s3.amazonaws.com/index.html
